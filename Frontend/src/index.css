@@ -1,0 +1,11 @@
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+}
+
+#root {
+  width: 100%;
+}
