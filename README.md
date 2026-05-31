@@ -3,7 +3,7 @@ A full-stack cloud storage application that enables users to organize, store, an
 
 ## 🚀 Live Demo
 
-[![CloudWare Preview](./screenshots/dashboard.png)](https://cloudware-hierarchical-file-management-d0xj.onrender.com/)
+[![CloudWare Preview](Screenshot/Dashboead.png)](https://cloudware-hierarchical-file-management-d0xj.onrender.com/)
 
 ---
 
