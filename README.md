@@ -3,7 +3,7 @@ A full-stack cloud storage application that enables users to organize, store, an
 
 ## 🚀 Live Demo
 
-[![CloudWare Preview](Screenshot/Dashboead.png)](https://full-stack-ai-resume-analyzer-and-coic.onrender.com/)]
+[![CloudWare Preview](Screenshot/Dashboead.png)](https://full-stack-ai-resume-analyzer-and-coic.onrender.com/)
 
 ---
 
