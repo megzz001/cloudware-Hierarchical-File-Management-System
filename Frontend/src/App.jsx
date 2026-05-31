@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import * as api from "./api";
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 const colors = {
@@ -166,11 +167,6 @@ const getFileIcon = (type, name) => {
   return { icon: "draft", color: colors.surfaceContainerHigh, iconColor: colors.onSurfaceVariant };
 };
 
-// ─── Storage (in-memory, persisted to state) ──────────────────────────────────
-// Structure: { user, folders: [{id, name, createdAt}], files: [{id, name, size, type, folderId, dataUrl, createdAt}] }
-
-const GUEST = { name: "Guest", email: "" };
-
 // ─── TopBar ───────────────────────────────────────────────────────────────────
 const TopBar = ({ user, onNav }) => (
   <header style={{
@@ -251,7 +247,7 @@ const BottomNav = ({ active, onNav }) => {
 // PAGE 1 — SIGN UP / LOGIN
 // ═══════════════════════════════════════════════════════════════════
 const AuthPage = ({ onAuth }) => {
-  const [mode, setMode] = useState("signup"); // signup | login
+  const [mode, setMode] = useState("signup");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -259,18 +255,25 @@ const AuthPage = ({ onAuth }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!email || !password) { setError("Please fill in all fields."); return; }
     if (mode === "signup" && !name) { setError("Please enter your name."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     setLoading(true);
-    // Simulate auth — in a real app you'd call an API
-    setTimeout(() => {
+
+    try {
+      const result = mode === "signup"
+        ? await api.register({ name, email, password })
+        : await api.login({ email, password });
+      const { files, folders } = await api.fetchUserData();
+      onAuth(result.user, files, folders);
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-      onAuth({ name: name || email.split("@")[0], email });
-    }, 1200);
+    }
   };
 
   return (
@@ -568,7 +571,6 @@ const FileViewerModal = ({ file, onClose }) => {
         boxShadow: "0 16px 48px rgba(0,0,0,0.18)",
         overflow: "hidden",
       }}>
-        {/* Header */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "16px 20px", borderBottom: `1px solid ${colors.outlineVariant}`,
@@ -581,7 +583,6 @@ const FileViewerModal = ({ file, onClose }) => {
           </button>
         </div>
 
-        {/* Preview */}
         <div style={{ padding: 20 }}>
           {isImage ? (
             <img src={file.dataUrl} alt={file.name} style={{
@@ -600,7 +601,6 @@ const FileViewerModal = ({ file, onClose }) => {
             </div>
           )}
 
-          {/* Meta */}
           <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {[
               ["Size", formatSize(file.size)],
@@ -671,8 +671,8 @@ const FilesPage = ({ files, folders, onNav, onDeleteFile, onDeleteFolder, onAddF
   const [search, setSearch] = useState("");
   const [viewingFile, setViewingFile] = useState(null);
   const [showNewFolder, setShowNewFolder] = useState(false);
-  const [activeFolder, setActiveFolder] = useState(null); // null = root
-  const [contextMenu, setContextMenu] = useState(null); // { type: 'file'|'folder', id, x, y }
+  const [activeFolder, setActiveFolder] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
 
   const displayFolders = folders.filter(f =>
     !search || f.name.toLowerCase().includes(search.toLowerCase())
@@ -684,7 +684,6 @@ const FilesPage = ({ files, folders, onNav, onDeleteFile, onDeleteFolder, onAddF
   });
 
   const activeFolderObj = folders.find(f => f.id === activeFolder);
-
   const closeContextMenu = () => setContextMenu(null);
 
   useEffect(() => {
@@ -701,7 +700,6 @@ const FilesPage = ({ files, folders, onNav, onDeleteFile, onDeleteFolder, onAddF
       `}</style>
       <div style={{ maxWidth: 600, margin: "0 auto", padding: "0 20px" }}>
 
-        {/* Breadcrumb + Search */}
         <div className="fade-up" style={{ margin: "16px 0 20px" }}>
           {activeFolder && (
             <button onClick={() => setActiveFolder(null)} style={{
@@ -730,20 +728,16 @@ const FilesPage = ({ files, folders, onNav, onDeleteFile, onDeleteFolder, onAddF
           </div>
         </div>
 
-        {/* Folders (only at root) */}
         {!activeFolder && (
           <section className="fade-up-1" style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: colors.onSurface }}>
-                Folders
-              </h2>
+              <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: colors.onSurface }}>Folders</h2>
               <button onClick={() => setShowNewFolder(true)} style={{
                 display: "flex", alignItems: "center", gap: 6,
                 background: "none", border: "none", cursor: "pointer",
                 color: colors.primary, fontSize: 13, fontWeight: 700,
               }}>
-                <Icon name="add" size={18} style={{ color: colors.primary }} />
-                New Folder
+                <Icon name="add" size={18} style={{ color: colors.primary }} /> New Folder
               </button>
             </div>
 
@@ -796,7 +790,6 @@ const FilesPage = ({ files, folders, onNav, onDeleteFile, onDeleteFolder, onAddF
           </section>
         )}
 
-        {/* Files */}
         <section className="fade-up-2">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: colors.onSurface }}>
@@ -921,7 +914,6 @@ const FilesPage = ({ files, folders, onNav, onDeleteFile, onDeleteFolder, onAddF
         </div>
       )}
 
-      {/* Modals */}
       {viewingFile && <FileViewerModal file={viewingFile} onClose={() => setViewingFile(null)} />}
       {showNewFolder && <NewFolderModal onClose={() => setShowNewFolder(false)} onCreate={(name) => { onAddFolder(name); setShowNewFolder(false); }} />}
     </div>
@@ -939,23 +931,17 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
   const [targetFolder, setTargetFolder] = useState("");
   const fileRef = useRef();
 
-  const readFile = (file) => new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = () => resolve({ dataUrl: reader.result, file });
-  });
-
-  const handleFiles = useCallback(async (rawFiles) => {
+  const handleFiles = useCallback((rawFiles) => {
     const arr = Array.from(rawFiles);
-    const results = await Promise.all(arr.map(readFile));
     setFiles(prev => [
       ...prev,
-      ...results.map(r => ({
+      ...arr.map(file => ({
         id: Date.now() + Math.random(),
-        name: r.file.name,
-        size: r.file.size,
-        type: r.file.type,
-        dataUrl: r.dataUrl,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : null,
+        rawFile: file,
         folderId: targetFolder || null,
         createdAt: Date.now(),
       }))
@@ -967,14 +953,19 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
     handleFiles(e.dataTransfer.files);
   }, [handleFiles]);
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (files.length === 0) return;
     setUploading(true);
-    setTimeout(() => {
-      files.forEach(f => onUpload({ ...f, folderId: targetFolder || null }));
-      setUploading(false);
+    try {
+      for (const f of files) {
+        await onUpload({ ...f, folderId: targetFolder || f.folderId || null });
+      }
       setDone(true);
-    }, 1500);
+    } catch (err) {
+      alert(err.message || "Upload failed. Is the backend running?");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeFile = (id) => setFiles(prev => prev.filter(f => f.id !== id));
@@ -1025,7 +1016,6 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
             boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
           }}>
             <div style={{ padding: 24 }}>
-              {/* Drop Zone */}
               <div
                 onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
@@ -1038,11 +1028,7 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
                   transition: "all 0.18s", marginBottom: 20,
                 }}
               >
-                <input
-                  ref={fileRef} type="file" multiple
-                  style={{ display: "none" }}
-                  onChange={e => handleFiles(e.target.files)}
-                />
+                <input ref={fileRef} type="file" multiple style={{ display: "none" }} onChange={e => handleFiles(e.target.files)} />
                 <div style={{
                   width: 64, height: 64, borderRadius: "50%",
                   background: colors.primaryFixed,
@@ -1050,15 +1036,10 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
                 }}>
                   <Icon name="upload" size={32} style={{ color: colors.primary }} />
                 </div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: colors.onSurface, marginBottom: 6 }}>
-                  Select files to upload
-                </p>
-                <p style={{ fontSize: 13, color: colors.onSurfaceVariant }}>
-                  Drag & drop or click to browse — any file type
-                </p>
+                <p style={{ fontWeight: 700, fontSize: 16, color: colors.onSurface, marginBottom: 6 }}>Select files to upload</p>
+                <p style={{ fontSize: 13, color: colors.onSurfaceVariant }}>Drag & drop or click to browse — any file type</p>
               </div>
 
-              {/* File Queue */}
               {files.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: colors.onSurfaceVariant, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
@@ -1070,8 +1051,7 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
                       return (
                         <div key={f.id} style={{
                           display: "flex", alignItems: "center", gap: 12,
-                          background: colors.surfaceContainerLow, borderRadius: 12,
-                          padding: "10px 14px",
+                          background: colors.surfaceContainerLow, borderRadius: 12, padding: "10px 14px",
                         }}>
                           <div style={{
                             width: 36, height: 36, borderRadius: 10, flexShrink: 0,
@@ -1080,7 +1060,7 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
                             {f.type.startsWith("image/") ? (
-                              <img src={f.dataUrl} alt={f.name} style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 10 }} />
+                              <img src={f.previewUrl} alt={f.name} style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 10 }} />
                             ) : (
                               <Icon name={icon} size={20} filled style={{ color: iconColor }} />
                             )}
@@ -1089,10 +1069,7 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
                             <p style={{ fontSize: 13, fontWeight: 600, color: colors.onSurface, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</p>
                             <p style={{ fontSize: 11, color: colors.onSurfaceVariant }}>{formatSize(f.size)}</p>
                           </div>
-                          <button onClick={() => removeFile(f.id)} style={{
-                            background: "none", border: "none", cursor: "pointer",
-                            color: colors.outline, display: "flex",
-                          }}>
+                          <button onClick={() => removeFile(f.id)} style={{ background: "none", border: "none", cursor: "pointer", color: colors.outline, display: "flex" }}>
                             <Icon name="close" size={18} />
                           </button>
                         </div>
@@ -1102,18 +1079,12 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
                 </div>
               )}
 
-              {/* Folder selector */}
               {folders.length > 0 && (
                 <div>
                   <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: colors.onSurfaceVariant, marginBottom: 6 }}>
                     Upload to folder (optional)
                   </label>
-                  <select
-                    className="input-field"
-                    value={targetFolder}
-                    onChange={e => setTargetFolder(e.target.value)}
-                    style={{ paddingLeft: 16 }}
-                  >
+                  <select className="input-field" value={targetFolder} onChange={e => setTargetFolder(e.target.value)} style={{ paddingLeft: 16 }}>
                     <option value="">— No folder (root) —</option>
                     {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                   </select>
@@ -1128,12 +1099,7 @@ const UploadPage = ({ folders, onNav, onUpload }) => {
               borderTop: `1.5px solid ${colors.outlineVariant}`,
             }}>
               <button className="btn-ghost" onClick={() => onNav("files")}>Cancel</button>
-              <button
-                className="btn-primary"
-                onClick={handleUpload}
-                disabled={files.length === 0 || uploading}
-                style={{ opacity: files.length === 0 ? 0.5 : 1 }}
-              >
+              <button className="btn-primary" onClick={handleUpload} disabled={files.length === 0 || uploading}>
                 {uploading ? (
                   <><Icon name="sync" size={18} style={{ color: "#fff", animation: "spin 1s linear infinite" }} /> Uploading...</>
                 ) : (
@@ -1159,7 +1125,6 @@ const ProfilePage = ({ user, files, onLogout }) => {
     <div style={{ paddingTop: 80, paddingBottom: 90, minHeight: "100vh", background: colors.surface }}>
       <div style={{ maxWidth: 500, margin: "0 auto", padding: "0 20px" }}>
 
-        {/* Avatar + name */}
         <div className="fade-up" style={{ textAlign: "center", marginBottom: 28, paddingTop: 16 }}>
           <div style={{
             width: 80, height: 80, borderRadius: "50%",
@@ -1170,15 +1135,10 @@ const ProfilePage = ({ user, files, onLogout }) => {
           }}>
             {initials}
           </div>
-          <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 22, color: colors.onSurface }}>
-            {user.name}
-          </h2>
-          {user.email && (
-            <p style={{ color: colors.onSurfaceVariant, fontSize: 14, marginTop: 4 }}>{user.email}</p>
-          )}
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 22, color: colors.onSurface }}>{user.name}</h2>
+          {user.email && <p style={{ color: colors.onSurfaceVariant, fontSize: 14, marginTop: 4 }}>{user.email}</p>}
         </div>
 
-        {/* Stats */}
         <div className="fade-up-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
           {[
             { label: "Total Files", value: files.length, icon: "description" },
@@ -1196,11 +1156,9 @@ const ProfilePage = ({ user, files, onLogout }) => {
           ))}
         </div>
 
-        {/* Account info */}
         <div className="fade-up-2" style={{
           background: colors.surfaceContainerLowest, borderRadius: 16,
-          border: `1.5px solid ${colors.outlineVariant}`, overflow: "hidden",
-          marginBottom: 20,
+          border: `1.5px solid ${colors.outlineVariant}`, overflow: "hidden", marginBottom: 20,
         }}>
           {[
             { icon: "person", label: "Name", value: user.name },
@@ -1208,8 +1166,7 @@ const ProfilePage = ({ user, files, onLogout }) => {
             { icon: "storage", label: "Plan", value: "Free — 50 GB" },
           ].map((row, i, arr) => (
             <div key={row.label} style={{
-              display: "flex", alignItems: "center", gap: 14,
-              padding: "14px 18px",
+              display: "flex", alignItems: "center", gap: 14, padding: "14px 18px",
               borderBottom: i < arr.length - 1 ? `1px solid ${colors.outlineVariant}` : "none",
             }}>
               <Icon name={row.icon} size={20} style={{ color: colors.primary }} />
@@ -1221,7 +1178,6 @@ const ProfilePage = ({ user, files, onLogout }) => {
           ))}
         </div>
 
-        {/* Logout */}
         <div className="fade-up-3">
           <button onClick={onLogout} style={{
             width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
@@ -1246,44 +1202,88 @@ const ProfilePage = ({ user, files, onLogout }) => {
 // ROOT APP
 // ═══════════════════════════════════════════════════════════════════
 export default function App() {
-  const [user, setUser] = useState(null); // null = logged out
+  const [user, setUser] = useState(null);
   const [page, setPage] = useState("auth");
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
+  const [booting, setBooting] = useState(true);
 
-  const handleAuth = (userData) => {
+  useEffect(() => {
+    (async () => {
+      if (!api.getToken()) {
+        setBooting(false);
+        return;
+      }
+      try {
+        const { user: me } = await api.fetchMe();
+        const { files: savedFiles, folders: savedFolders } = await api.fetchUserData();
+        setUser(me);
+        setFiles(savedFiles);
+        setFolders(savedFolders);
+        setPage("dashboard");
+      } catch {
+        api.logout();
+      } finally {
+        setBooting(false);
+      }
+    })();
+  }, []);
+
+  const handleAuth = (userData, loadedFiles, loadedFolders) => {
     setUser(userData);
+    setFiles(loadedFiles);
+    setFolders(loadedFolders);
     setPage("dashboard");
   };
 
   const handleLogout = () => {
+    api.logout();
     setUser(null);
     setPage("auth");
-    // Clear files/folders on logout (session-based)
     setFiles([]);
     setFolders([]);
   };
 
-  const handleUpload = (fileObj) => {
-    setFiles(prev => [...prev, fileObj]);
+  const handleUpload = async (fileEntry) => {
+    const uploaded = await api.uploadFile(fileEntry.rawFile, fileEntry.folderId);
+    setFiles(prev => [...prev, uploaded]);
   };
 
-  const handleDeleteFile = (id) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
+  const handleDeleteFile = async (id) => {
+    try {
+      await api.deleteFile(id);
+      setFiles(prev => prev.filter(f => f.id !== id));
+    } catch (err) {
+      alert(err.message || "Failed to delete file");
+    }
   };
 
-  const handleDeleteFolder = (id) => {
-    setFolders(prev => prev.filter(f => f.id !== id));
-    // Move folder's files back to root
-    setFiles(prev => prev.map(f => f.folderId === id ? { ...f, folderId: null } : f));
+  const handleDeleteFolder = async (id) => {
+    try {
+      await api.deleteFolder(id);
+      setFolders(prev => prev.filter(f => f.id !== id));
+      setFiles(prev => prev.map(f => f.folderId === id ? { ...f, folderId: null } : f));
+    } catch (err) {
+      alert(err.message || "Failed to delete folder");
+    }
   };
 
-  const handleAddFolder = (name) => {
-    setFolders(prev => [...prev, { id: Date.now() + "", name, createdAt: Date.now() }]);
+  const handleAddFolder = async (name) => {
+    try {
+      const folder = await api.createFolder(name);
+      setFolders(prev => [...prev, folder]);
+    } catch (err) {
+      alert(err.message || "Failed to create folder");
+    }
   };
 
-  const handleMoveFile = (fileId, folderId) => {
-    setFiles(prev => prev.map(f => f.id === fileId ? { ...f, folderId } : f));
+  const handleMoveFile = async (fileId, folderId) => {
+    try {
+      const updated = await api.moveFile(fileId, folderId);
+      setFiles(prev => prev.map(f => f.id === fileId ? updated : f));
+    } catch (err) {
+      alert(err.message || "Failed to move file");
+    }
   };
 
   const renderPage = () => {
@@ -1295,14 +1295,26 @@ export default function App() {
     return null;
   };
 
-  const showNav = !!user;
+  if (booting) {
+    return (
+      <>
+        <style>{globalStyles}</style>
+        <div style={{
+          minHeight: "100vh", display: "flex", alignItems: "center",
+          justifyContent: "center", color: colors.onSurfaceVariant,
+        }}>
+          <Icon name="sync" size={28} style={{ animation: "spin 1s linear infinite" }} />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <style>{globalStyles}</style>
-      {showNav && <TopBar user={user} onNav={setPage} />}
+      {user && <TopBar user={user} onNav={setPage} />}
       {renderPage()}
-      {showNav && <BottomNav active={page} onNav={setPage} />}
+      {user && <BottomNav active={page} onNav={setPage} />}
     </>
   );
 }

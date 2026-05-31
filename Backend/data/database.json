@@ -1,0 +1,54 @@
+{
+  "users": [
+    {
+      "id": "cb5f17a3-20a8-4ffe-9d4d-3e8dcaa8fa2b",
+      "name": "Test User",
+      "email": "test@example.com",
+      "passwordHash": "$2b$10$E9Jja7Og3jopMRJrYCJ0D.JXah1c1vnnZ6OPhVy3aGcsJZVVQBQNq",
+      "createdAt": 1780219552603
+    },
+    {
+      "id": "f3c0fa74-444b-49e4-8d81-681a7554be72",
+      "name": "Megha",
+      "email": "meghagusain@gmail.com",
+      "passwordHash": "$2b$10$sr858qmamHBteYYcsy4EoOzt70Hr9w8gGvYnzRreYyhgEdWx.hdHa",
+      "createdAt": 1780219677122
+    }
+  ],
+  "folders": [
+    {
+      "id": "a03d41ca-8802-402f-8851-947b4ff1b631",
+      "userId": "f3c0fa74-444b-49e4-8d81-681a7554be72",
+      "name": "Projects",
+      "createdAt": 1780219702133
+    },
+    {
+      "id": "6012943a-5f3f-4c1e-a2f8-bb77ee70f61a",
+      "userId": "f3c0fa74-444b-49e4-8d81-681a7554be72",
+      "name": "Java",
+      "createdAt": 1780219730934
+    }
+  ],
+  "files": [
+    {
+      "id": "aa53acd8-10ca-47cf-b412-8dc619ae777f",
+      "userId": "f3c0fa74-444b-49e4-8d81-681a7554be72",
+      "name": "Screenshot 2026-05-30 135107.png",
+      "size": 174166,
+      "type": "image/png",
+      "folderId": "a03d41ca-8802-402f-8851-947b4ff1b631",
+      "storagePath": "uploads\\f3c0fa74-444b-49e4-8d81-681a7554be72\\1780219721035-Screenshot_2026-05-30_135107.png",
+      "createdAt": 1780219721045
+    },
+    {
+      "id": "dafb9777-ec32-41a5-923a-4dce8f953649",
+      "userId": "f3c0fa74-444b-49e4-8d81-681a7554be72",
+      "name": "Screenshot 2026-05-30 004231.png",
+      "size": 18911,
+      "type": "image/png",
+      "folderId": "6012943a-5f3f-4c1e-a2f8-bb77ee70f61a",
+      "storagePath": "uploads\\f3c0fa74-444b-49e4-8d81-681a7554be72\\1780219746310-Screenshot_2026-05-30_004231.png",
+      "createdAt": 1780219746355
+    }
+  ]
+}
