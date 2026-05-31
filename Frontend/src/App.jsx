@@ -244,10 +244,161 @@ const BottomNav = ({ active, onNav }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PAGE 0 — HOME
+// ═══════════════════════════════════════════════════════════════════
+const HomePage = ({ user, onLogin, onSignup, onOpenDashboard, onUpload }) => (
+  <div style={{
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "32px 20px 96px",
+    background: `radial-gradient(circle at top left, rgba(0,75,202,0.12), transparent 30%), radial-gradient(circle at bottom right, rgba(180,197,255,0.2), transparent 32%), ${colors.surface}`,
+    position: "relative",
+    overflow: "hidden",
+  }}>
+    {[
+      { top: -100, left: -120, color: "#004bca", size: 280 },
+      { bottom: -140, right: -100, color: "#b4c5ff", size: 320 },
+    ].map((b, i) => (
+      <div key={i} style={{
+        position: "absolute", borderRadius: "50%",
+        width: b.size, height: b.size,
+        top: b.top, left: b.left, right: b.right, bottom: b.bottom,
+        background: b.color, opacity: 0.14,
+        filter: "blur(70px)", zIndex: 0,
+        animation: `floatBlob ${4 + i}s ease-in-out infinite`,
+      }} />
+    ))}
+
+    <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 1080 }}>
+      <div className="fade-up" style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gap: 24,
+        alignItems: "center",
+      }}>
+        <div>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 10,
+            padding: "8px 14px", borderRadius: 999,
+            background: colors.primaryFixed,
+            color: colors.primary,
+            fontSize: 13, fontWeight: 700,
+            marginBottom: 18,
+          }}>
+            <Icon name="cloud" size={18} filled /> Cloudware file vault
+          </div>
+          <h1 style={{
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: "clamp(36px, 6vw, 64px)",
+            lineHeight: 1.02,
+            letterSpacing: "-1.5px",
+            color: colors.onSurface,
+            marginBottom: 18,
+          }}>
+            Keep files organized.
+            <br />
+            Upload only when you sign in.
+          </h1>
+          <p style={{ color: colors.onSurfaceVariant, fontSize: 16, lineHeight: 1.7, maxWidth: 560, marginBottom: 28 }}>
+            Start on a public home page, explore the platform, and move into the upload flow only after logging in.
+          </p>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
+            <button className="btn-primary" onClick={user ? onOpenDashboard : onSignup}>
+              <Icon name={user ? "dashboard" : "person_add"} size={18} style={{ color: "#fff" }} />
+              {user ? "Open Dashboard" : "Create Account"}
+            </button>
+            <button className="btn-ghost" onClick={user ? onUpload : onLogin}>
+              <Icon name={user ? "cloud_upload" : "login"} size={18} />
+              {user ? "Upload Files" : "Login"}
+            </button>
+          </div>
+
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            {[
+              { value: "Private upload", label: "Login required" },
+              { value: "Fast access", label: "Open dashboard after sign in" },
+              { value: "Simple flow", label: "Home first, action second" },
+            ].map((item) => (
+              <div key={item.value} style={{
+                minWidth: 160,
+                padding: 16,
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.72)",
+                backdropFilter: "blur(10px)",
+                border: `1px solid ${colors.outlineVariant}`,
+              }}>
+                <p style={{ fontWeight: 800, color: colors.onSurface, marginBottom: 4 }}>{item.value}</p>
+                <p style={{ fontSize: 13, color: colors.onSurfaceVariant, lineHeight: 1.5 }}>{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="fade-up-1" style={{
+          background: "rgba(255,255,255,0.88)",
+          border: `1.5px solid ${colors.outlineVariant}`,
+          borderRadius: 28,
+          padding: 24,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.10)",
+          backdropFilter: "blur(14px)",
+        }}>
+          <div style={{
+            borderRadius: 20,
+            background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryContainer})`,
+            padding: 28,
+            color: "#fff",
+            marginBottom: 16,
+          }}>
+            <Icon name="lock" size={28} style={{ color: "#fff", marginBottom: 12 }} filled />
+            <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, lineHeight: 1.05, marginBottom: 10 }}>
+              Uploads stay protected.
+            </h2>
+            <p style={{ opacity: 0.92, lineHeight: 1.6 }}>
+              If someone clicks Upload without being logged in, they will be sent to the login page first.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            {[
+              { icon: "home", title: "Public home page", text: "Everyone lands here first." },
+              { icon: "login", title: "Login gate", text: "Upload prompts sign in when needed." },
+              { icon: "folder", title: "Private dashboard", text: "Signed-in users continue to files and upload." },
+            ].map((card) => (
+              <div key={card.title} style={{
+                display: "flex", gap: 14, alignItems: "flex-start",
+                padding: 14, borderRadius: 16,
+                background: colors.surfaceContainerLow,
+              }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 12,
+                  background: colors.primaryFixed,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <Icon name={card.icon} size={20} style={{ color: colors.primary }} filled />
+                </div>
+                <div>
+                  <p style={{ fontWeight: 800, color: colors.onSurface, marginBottom: 4 }}>{card.title}</p>
+                  <p style={{ fontSize: 13, color: colors.onSurfaceVariant, lineHeight: 1.5 }}>{card.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════
 // PAGE 1 — SIGN UP / LOGIN
 // ═══════════════════════════════════════════════════════════════════
-const AuthPage = ({ onAuth }) => {
-  const [mode, setMode] = useState("signup");
+const AuthPage = ({ onAuth, message = "", initialMode = "signup" }) => {
+  const [mode, setMode] = useState(initialMode);
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -318,6 +469,19 @@ const AuthPage = ({ onAuth }) => {
           <p style={{ color: colors.onSurfaceVariant, fontSize: 14, lineHeight: 1.6 }}>
             {mode === "signup" ? "Secure file management starts here." : "Sign in to access your files."}
           </p>
+          {message && (
+            <p style={{
+              marginTop: 12,
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: colors.primary,
+              background: colors.primaryFixed,
+              borderRadius: 12,
+              padding: "10px 12px",
+            }}>
+              {message}
+            </p>
+          )}
         </div>
 
         <div className="fade-up-1" style={{
@@ -1203,10 +1367,13 @@ const ProfilePage = ({ user, files, onLogout }) => {
 // ═══════════════════════════════════════════════════════════════════
 export default function App() {
   const [user, setUser] = useState(null);
-  const [page, setPage] = useState("auth");
+  const [page, setPage] = useState("home");
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
   const [booting, setBooting] = useState(true);
+  const [authMessage, setAuthMessage] = useState("");
+  const [authMode, setAuthMode] = useState("signup");
+  const [authTarget, setAuthTarget] = useState("dashboard");
 
   useEffect(() => {
     (async () => {
@@ -1220,7 +1387,6 @@ export default function App() {
         setUser(me);
         setFiles(savedFiles);
         setFolders(savedFolders);
-        setPage("dashboard");
       } catch {
         api.logout();
       } finally {
@@ -1229,17 +1395,18 @@ export default function App() {
     })();
   }, []);
 
-  const handleAuth = (userData, loadedFiles, loadedFolders) => {
+  const handleAuth = (userData, loadedFiles, loadedFolders, redirectTo = authTarget) => {
     setUser(userData);
     setFiles(loadedFiles);
     setFolders(loadedFolders);
-    setPage("dashboard");
+    setPage(redirectTo);
+    setAuthMessage("");
   };
 
   const handleLogout = () => {
     api.logout();
     setUser(null);
-    setPage("auth");
+    setPage("home");
     setFiles([]);
     setFolders([]);
   };
@@ -1286,12 +1453,50 @@ export default function App() {
     }
   };
 
+  const goToAuth = (message = "", mode = "login") => {
+    setAuthMessage(message);
+    setAuthMode(mode);
+    setAuthTarget("dashboard");
+    setPage("auth");
+  };
+
+  const openAuthForUpload = () => {
+    setAuthMessage("Please log in to upload files.");
+    setAuthMode("login");
+    setAuthTarget("upload");
+    setPage("auth");
+  };
+
+  const openAuthForDashboard = () => {
+    setAuthMessage("Please log in to continue.");
+    setAuthMode("login");
+    setAuthTarget("dashboard");
+    setPage("auth");
+  };
+
+  const handleNav = (nextPage) => {
+    if (nextPage === "upload" && !user) {
+      openAuthForUpload();
+      return;
+    }
+
+    if ((nextPage === "dashboard" || nextPage === "files" || nextPage === "profile") && !user) {
+      openAuthForDashboard();
+      return;
+    }
+
+    setPage(nextPage);
+  };
+
   const renderPage = () => {
-    if (!user) return <AuthPage onAuth={handleAuth} />;
-    if (page === "dashboard") return <DashboardPage user={user} files={files} folders={folders} onNav={setPage} />;
-    if (page === "files") return <FilesPage files={files} folders={folders} onNav={setPage} onDeleteFile={handleDeleteFile} onDeleteFolder={handleDeleteFolder} onAddFolder={handleAddFolder} onMoveFile={handleMoveFile} />;
-    if (page === "upload") return <UploadPage folders={folders} onNav={setPage} onUpload={handleUpload} />;
+    if (page === "home") return <HomePage user={user} onLogin={() => goToAuth("Please log in to upload files.", "login")} onSignup={() => goToAuth("Create your account to get started.", "signup")} onOpenDashboard={() => handleNav("dashboard")} onUpload={() => handleNav("upload")} />;
+    if (page === "auth") return <AuthPage initialMode={authMode} onAuth={handleAuth} message={authMessage} />;
+    if (!user) return <HomePage user={user} onLogin={() => goToAuth("Please log in to upload files.", "login")} onSignup={() => goToAuth("Create your account to get started.", "signup")} onOpenDashboard={() => handleNav("dashboard")} onUpload={() => handleNav("upload")} />;
+    if (page === "dashboard") return <DashboardPage user={user} files={files} folders={folders} onNav={handleNav} />;
+    if (page === "files") return <FilesPage files={files} folders={folders} onNav={handleNav} onDeleteFile={handleDeleteFile} onDeleteFolder={handleDeleteFolder} onAddFolder={handleAddFolder} onMoveFile={handleMoveFile} />;
+    if (page === "upload") return <UploadPage folders={folders} onNav={handleNav} onUpload={handleUpload} />;
     if (page === "profile") return <ProfilePage user={user} files={files} onLogout={handleLogout} />;
+    return <HomePage user={user} onLogin={() => goToAuth("Please log in to upload files.", "login")} onSignup={() => goToAuth("Create your account to get started.", "signup")} onOpenDashboard={() => handleNav("dashboard")} onUpload={() => handleNav("upload")} />;
     return null;
   };
 
@@ -1312,9 +1517,9 @@ export default function App() {
   return (
     <>
       <style>{globalStyles}</style>
-      {user && <TopBar user={user} onNav={setPage} />}
+      {user && page !== "home" && <TopBar user={user} onNav={handleNav} />}
       {renderPage()}
-      {user && <BottomNav active={page} onNav={setPage} />}
+      {user && page !== "home" && <BottomNav active={page} onNav={handleNav} />}
     </>
   );
 }
